@@ -1,8 +1,10 @@
 #! /usr/bin/env python3
 """Program to make the turtlebot3 robot explore the environment."""
 
+import math
 import rospy
-from std_msgs.msg import String
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
 
 
 class ExploringController():
@@ -15,30 +17,105 @@ class ExploringController():
         update_rate = 50
         time_period = 1. / update_rate
 
+        self.linear_speed = 0.26
+        self.angular_speed = 1.82
+        self.clipping_distance = 3.5
+        self.scaling_factor = 402.0
+
+        self.magnitude = 0
+        self.target_angle = 0
+        self.laser_data = []
+
         # Subscribers
-        rospy.Subscriber("/chatter", String, self.chatter_callback)
+        rospy.Subscriber("/scan", LaserScan, self.laser_callback)
 
         # Publishers
-        self.pub = rospy.Publisher('/chatter', String, queue_size=10)
+        self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
         # Timers
-        rospy.Timer(rospy.Duration(time_period), self.chatter_update)
+        rospy.Timer(rospy.Duration(time_period), self.controller_update)
 
         # Shutdown Function
         rospy.on_shutdown(self.terminate)
 
-    def chatter_callback(self, msg):
-        """Listen for the chatter topic."""
-        rospy.loginfo(f"Subscribing: {msg.data}")
+    def move_forward(self):
+        """Move the robot forward."""
+        twist = Twist()
+        twist.linear.x = \
+            self.linear_speed * self.magnitude / self.scaling_factor
+        twist.angular.z = 0
+        self.pub.publish(twist)
 
-    def chatter_update(self, _):
-        """Update the chatter topic."""
-        chatter_msg = String()
-        chatter_msg.data = f"Hello World: {int(rospy.get_time())}"
-        self.pub.publish(chatter_msg)
+    def move_backward(self):
+        """Move the robot backward."""
+        twist = Twist()
+        twist.linear.x = \
+            -self.linear_speed * self.magnitude / self.scaling_factor
+        twist.angular.z = 0
+        self.pub.publish(twist)
+    
+    def turn_left(self):
+        """Turn the robot left."""
+        twist = Twist()
+        twist.linear.x = 0
+        twist.angular.z = \
+            self.angular_speed * self.magnitude / self.scaling_factor
+        self.pub.publish(twist)
 
-        # Display the message on the console
-        rospy.loginfo(f"Publishing: {chatter_msg.data}")
+    def turn_right(self):
+        """Turn the robot right."""
+        twist = Twist()
+        twist.linear.x = 0
+        twist.angular.z = \
+            -self.angular_speed * self.magnitude / self.scaling_factor
+        self.pub.publish(twist)
+
+    def stop_moving(self):
+        """Stop the robot."""
+        twist = Twist()
+        twist.linear.x = 0
+        twist.angular.z = 0
+        self.pub.publish(twist)
+
+    def laser_callback(self, msg):
+        """Callback function for the laser scan."""
+        # clip the laser data
+        self.laser_data = msg.ranges[0:90] + msg.ranges[270:360]
+        
+        horizontal_component = 0
+        vertical_component = 0
+
+        for i in range(len(self.laser_data)):
+            if self.laser_data[i] > self.clipping_distance:
+                self.laser_data = list(self.laser_data)
+                self.laser_data[i] = self.clipping_distance
+                self.laser_data = tuple(self.laser_data)
+
+            horizontal_component += self.laser_data[i] * math.cos(math.radians(i))
+            vertical_component += self.laser_data[i] * math.sin(math.radians(i))
+        
+        self.magnitude = math.sqrt(horizontal_component**2 + vertical_component**2)
+        self.target_angle = math.degrees(math.atan2(vertical_component, horizontal_component))
+
+        print("Magnitude: ", self.magnitude)
+        print("Target Angle: ", self.target_angle)
+
+    def obstacle_avoider(self):
+        # move forward if not obstacle ahead
+        if 85 < self.target_angle < 95:
+            self.move_forward()
+        elif self.target_angle < 85:
+            self.turn_left()
+        elif self.target_angle > 95:
+            self.turn_right()
+
+    def controller_update(self, _):
+        """Update the controller."""
+        # Check if the laser data is available
+        if self.laser_data:
+            self.obstacle_avoider()
+        else:
+            self.stop_moving()
 
     def terminate(self):
         """Terminate the node."""
