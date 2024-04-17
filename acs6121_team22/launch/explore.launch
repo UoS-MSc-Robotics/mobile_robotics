@@ -9,4 +9,8 @@
 
   <!-- Launch the controller -->
   <!-- <node pkg="acs6121_team22" type="exploring_controller.py" name="exploring_controller_node" output="screen" /> -->
+
+  <!-- Run SLAM -->
+  <!-- <include file="$(find turtlebot3_slam)/launch/turtlebot3_slam.launch" /> -->
+
 </launch>

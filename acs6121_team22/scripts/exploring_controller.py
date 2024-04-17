@@ -80,27 +80,28 @@ class ExploringController():
 
     def laser_callback(self, msg):
         """Callback function for the laser scan."""
-        # clip the laser data
-        self.laser_data = msg.ranges[0:90] + msg.ranges[270:360]
         self.full_laser_data = msg.ranges
+        # # clip the laser data
+        # self.laser_data = msg.ranges[0:90] + msg.ranges[270:360]
+
         
-        horizontal_component = 0
-        vertical_component = 0
+        # horizontal_component = 0
+        # vertical_component = 0
 
-        for i in range(len(self.laser_data)):
-            if self.laser_data[i] > self.clipping_distance:
-                self.laser_data = list(self.laser_data)
-                self.laser_data[i] = self.clipping_distance
-                self.laser_data = tuple(self.laser_data)
+        # for i in range(len(self.laser_data)):
+        #     if self.laser_data[i] > self.clipping_distance:
+        #         self.laser_data = list(self.laser_data)
+        #         self.laser_data[i] = self.clipping_distance
+        #         self.laser_data = tuple(self.laser_data)
 
-            horizontal_component += self.laser_data[i] * math.cos(math.radians(i))
-            vertical_component += self.laser_data[i] * math.sin(math.radians(i))
+        #     horizontal_component += self.laser_data[i] * math.cos(math.radians(i))
+        #     vertical_component += self.laser_data[i] * math.sin(math.radians(i))
         
-        self.magnitude = math.sqrt(horizontal_component**2 + vertical_component**2)
-        self.target_angle = math.degrees(math.atan2(vertical_component, horizontal_component))
+        # self.magnitude = math.sqrt(horizontal_component**2 + vertical_component**2)
+        # self.target_angle = math.degrees(math.atan2(vertical_component, horizontal_component))
 
-        print("Magnitude: ", self.magnitude)
-        print("Target Angle: ", self.target_angle)
+        # print("Magnitude: ", self.magnitude)
+        # print("Target Angle: ", self.target_angle)
 
     def obstacle_avoider(self):
         """Avoid obstacles."""
