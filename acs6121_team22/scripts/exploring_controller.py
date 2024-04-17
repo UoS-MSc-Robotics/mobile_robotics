@@ -12,7 +12,7 @@ class ExploringController():
 
     def __init__(self):
         """Initialize the Exploring Controller Class."""
-        rospy.init_node('exploring_controller_node')
+        rospy.init_node('exploring_controller_node', disable_signals=True, anonymous=True)
 
         update_rate = 50
         time_period = 1. / update_rate
@@ -25,6 +25,7 @@ class ExploringController():
         self.magnitude = 0
         self.target_angle = 0
         self.laser_data = []
+        self.full_laser_data = []
 
         # Subscribers
         rospy.Subscriber("/scan", LaserScan, self.laser_callback)
@@ -81,6 +82,7 @@ class ExploringController():
         """Callback function for the laser scan."""
         # clip the laser data
         self.laser_data = msg.ranges[0:90] + msg.ranges[270:360]
+        self.full_laser_data = msg.ranges
         
         horizontal_component = 0
         vertical_component = 0
@@ -101,13 +103,25 @@ class ExploringController():
         print("Target Angle: ", self.target_angle)
 
     def obstacle_avoider(self):
-        # move forward if not obstacle ahead
-        if 85 < self.target_angle < 95:
-            self.move_forward()
-        elif self.target_angle < 85:
-            self.turn_left()
-        elif self.target_angle > 95:
+        """Avoid obstacles."""
+        # if 85 < self.target_angle < 95:
+        #     self.move_forward()
+        # if self.target_angle < 85:
+        #     self.turn_left()
+        # if self.target_angle > 95:
+        #     self.turn_right()
+
+        # if object is headon, move backward
+        if any((distance < 0.2 for distance in self.laser_data[0:20]) or any(distance < 0.2 for distance in self.laser_data[70:90])):
+            self.move_backward()
+        # if there is significant obstacles in the indices from 0 to 65, turn right
+        elif any(distance < 0.5 for distance in self.laser_data[0:65]):
             self.turn_right()
+        # if there is significant obstacles in the indices from 295 to 360, turn left
+        elif any(distance < 0.5 for distance in self.laser_data[295:360]):
+            self.turn_left()
+        else:
+            self.move_forward()
 
     def controller_update(self, _):
         """Update the controller."""
