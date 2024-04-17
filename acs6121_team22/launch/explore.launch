@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  
+  <!-- Configurable Arguments -->
+  <arg name="sim" default="true" />
+
+  <!-- Launch the arena -->
+  <include file="$(find acs6121)/launch/arena.launch" if="$(arg sim)" />
+
+  <!-- Launch the controller -->
+  <node pkg="acs6121_team22" type="exploring_controller.py" name="exploring_controller_node" output="screen" />
+</launch>
