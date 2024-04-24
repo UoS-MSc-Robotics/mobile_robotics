@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  
+
   <!-- Configurable Arguments -->
   <arg name="sim" default="false" />
-  <arg name="mapping" default="true" />
+  <arg name="mapping" default="false" />
   <arg name="launch_controller" default="false" />
 
   <!-- Launch the arena -->

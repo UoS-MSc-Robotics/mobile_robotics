@@ -20,6 +20,7 @@ class ExploringController():
         self.angular_speed = 1.82
         self.full_laser_data = []
 
+        self.clipping_distance = 3.5
         self.backward_threshold = 0.25
         self.turning_threshold = 0.5
 
@@ -48,12 +49,12 @@ class ExploringController():
         twist.linear.x = -self.linear_speed
         twist.angular.z = 0
         self.pub.publish(twist)
-    
+
     def turn_smooth_left(self):
         """Turn the robot smooth left."""
         twist = Twist()
         twist.linear.x = self.linear_speed / 2
-        twist.angular.z = self.angular_speed 
+        twist.angular.z = self.angular_speed
         self.pub.publish(twist)
 
     def turn_smooth_right(self):
@@ -67,7 +68,7 @@ class ExploringController():
         """Turn the robot hard left."""
         twist = Twist()
         twist.linear.x = 0.0
-        twist.angular.z = self.angular_speed 
+        twist.angular.z = self.angular_speed
         self.pub.publish(twist)
 
     def turn_hard_right(self):
@@ -88,7 +89,7 @@ class ExploringController():
         """Callback function for the laser scan."""
         self.full_laser_data = msg.ranges
 
-        for i in range(len(self.full_laser_data)):
+        for i, _ in enumerate(self.full_laser_data):
             if self.full_laser_data[i] == 0:
                 self.full_laser_data = list(self.full_laser_data)
                 self.full_laser_data[i] = self.clipping_distance

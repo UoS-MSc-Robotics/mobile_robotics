@@ -1,4 +1,4 @@
-image: /home/student/catkin_ws/src/mobile_robotics/acs6121_team22/maps/explore_map/explore_map.pgm
+image: /throwaway_ws/src/mobile_robotics/acs6121_team22/maps/explore_map/explore_map.pgm
 resolution: 0.050000
 origin: [-10.000000, -10.000000, 0.000000]
 negate: 0
