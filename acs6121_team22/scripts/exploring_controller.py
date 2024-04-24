@@ -103,6 +103,21 @@ class ExploringController():
             self.move_backward()
             print("backward")
         # if there is significant obstacles in the indices from 0 to 40, turn right
+        elif (any(distance < self.turning_threshold for distance in self.full_laser_data[0:40])) and not (any(distance < self.turning_threshold for distance in self.full_laser_data[320:360])):
+            if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[0:40]):
+                self.turn_hard_right()
+                print("hard right")
+            else:
+                print("smooth right")
+                self.turn_smooth_right()
+        # if there is significant obstacles in the indices from 320 to 360, turn left
+        elif (any(distance < self.turning_threshold for distance in self.full_laser_data[320:360])) and not (any(distance < self.turning_threshold for distance in self.full_laser_data[0:40])):
+            if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[320:360]):
+                self.turn_hard_left()
+                print("hard left")
+            else:
+                print("smooth left")
+                self.turn_smooth_left()
         elif any(distance < self.turning_threshold for distance in self.full_laser_data[0:40]):
             if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[0:40]):
                 self.turn_hard_right()
