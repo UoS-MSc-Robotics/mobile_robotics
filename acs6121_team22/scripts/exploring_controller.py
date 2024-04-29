@@ -24,6 +24,10 @@ class ExploringController():
         self.backward_threshold = 0.25
         self.turning_threshold = 0.5
 
+        self.left_turn = 0
+        self.right_turn = 0
+        self.direction = "none"
+
         # Subscribers
         rospy.Subscriber("/scan", LaserScan, self.laser_callback)
 
@@ -98,44 +102,90 @@ class ExploringController():
     def obstacle_avoider(self):
         """Avoid obstacles."""
 
+        print("left counter", self.left_turn)
+        print("right counter", self.right_turn)
+
+
         # if object is headon, move backward
         if any((distance < self.backward_threshold for distance in self.full_laser_data[0:20]) or any(distance < self.backward_threshold for distance in self.full_laser_data[70:90])):
             self.move_backward()
-            print("backward")
-        # if there is significant obstacles in the indices from 0 to 40, turn right
-        elif (any(distance < self.turning_threshold for distance in self.full_laser_data[0:40])) and not (any(distance < self.turning_threshold for distance in self.full_laser_data[320:360])):
-            if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[0:40]):
+            #print("backward")
+
+        elif self.right_turn == 5:
+            self.right_turn = 0
+            self.left_turn = 0
+            
+
+            while not any(distance < self.turning_threshold for distance in self.full_laser_data[0:40]):
+                self.turn_hard_left()
+                print("hard left")
+
+            #print("hard left")
+
+        elif self.left_turn == 5:
+            self.right_turn = 0
+            self.left_turn = 0
+
+            while any(distance < self.turning_threshold for distance in self.full_laser_data[320:360]):
                 self.turn_hard_right()
                 print("hard right")
+
+        # if there is significant obstacles in the indices from 0 to 40, turn right
+        elif (any(distance < self.turning_threshold for distance in self.full_laser_data[0:40])) and not (any(distance < self.turning_threshold for distance in self.full_laser_data[320:360])):
+
+            self.direction = "right"
+            
+            if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[0:40]):
+                self.turn_hard_right()
+                #print("hard right")
             else:
-                print("smooth right")
+                #print("smooth right")
                 self.turn_smooth_right()
         # if there is significant obstacles in the indices from 320 to 360, turn left
         elif (any(distance < self.turning_threshold for distance in self.full_laser_data[320:360])) and not (any(distance < self.turning_threshold for distance in self.full_laser_data[0:40])):
+
+            self.direction = "left"
+            
             if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[320:360]):
                 self.turn_hard_left()
-                print("hard left")
+                #print("hard left")
             else:
-                print("smooth left")
+                #print("smooth left")
                 self.turn_smooth_left()
         elif any(distance < self.turning_threshold for distance in self.full_laser_data[0:40]):
+
+            self.direction = "right"
+
             if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[0:40]):
                 self.turn_hard_right()
-                print("hard right")
+                #print("hard right")
             else:
-                print("smooth right")
+                #print("smooth right")
                 self.turn_smooth_right()
         # if there is significant obstacles in the indices from 320 to 360, turn left
         elif any(distance < self.turning_threshold for distance in self.full_laser_data[320:360]):
+
+            self.direction = "left"
+
             if any(distance < self.turning_threshold/2 for distance in self.full_laser_data[320:360]):
                 self.turn_hard_left()
-                print("hard left")
+                #print("hard left")
             else:
-                print("smooth left")
+                #print("smooth left")
                 self.turn_smooth_left()
         else:
+
+            if self.direction == "right":
+                self.right_turn += 1
+                self.left_turn = 0
+                self.direction = "none"
+            elif self.direction == "left":
+                self.right_turn = 0
+                self.left_turn += 1
+                self.direction = "none"
+
             self.move_forward()
-            print("forward")
+            #print("forward")
 
     def controller_update(self, _):
         """Update the controller."""
