@@ -135,7 +135,6 @@ class ExploringController():
         # Check if the laser data is available
         if self.full_laser_data:
             self.obstacle_avoider()
-            pass
         else:
             self.stop_moving()
 
